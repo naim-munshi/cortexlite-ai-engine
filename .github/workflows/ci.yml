@@ -2,6 +2,8 @@ name: CI
 on:
   push:
   pull_request:
+permissions:
+  contents: read
 jobs:
   native-build-and-test:
     strategy:
@@ -15,7 +17,29 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build --parallel 2
-      - name: Native and end-to-end tests
+      - name: Regression and integration tests
         run: ctest --test-dir build --output-on-failure
-      - name: Verify example evaluation thresholds
+      - name: Verify example accuracy thresholds
         run: python3 python/check_metrics.py --binary ./build/cortexlite
+      - name: Five repeated benchmarks (CI runner, not production)
+        if: matrix.os == 'ubuntu-latest'
+        run: python3 scripts/run_benchmarks.py --repetitions 5 --iterations 3000 --vectors 1000 --output reports/ci-benchmarks.json
+      - name: Preserve raw measured benchmark evidence
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cortexlite-benchmarks-${{ github.sha }}
+          path: |
+            reports/ci-benchmarks.json
+            reports/ci-benchmarks.csv
+          retention-days: 30
+  sanitizer-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure ASan + UBSan
+        run: cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=Debug -DCORTEXLITE_SANITIZERS=ON
+      - name: Build
+        run: cmake --build build-sanitize --parallel 2
+      - name: Address and undefined behavior tests
+        run: ctest --test-dir build-sanitize --output-on-failure
