@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 
 static bool nearly(float a, float b, float eps = 1e-4f) { return std::fabs(a - b) < eps; }
 int main(int argc, char **argv) {
@@ -98,5 +99,25 @@ int main(int argc, char **argv) {
         cl_quantized_model_free(&quant);
         assert(cl_quantized_storage_bytes(&quant) == 0);
     }
+    // Regression: dividing the smallest finite weights by 127 used to
+    // underflow to a zero quantization scale and cause division by zero.
+    float tiny_w1[] = {std::numeric_limits<float>::denorm_min()};
+    float tiny_b1[] = {0.0f};
+    float tiny_w2[] = {1.0f, -1.0f};
+    float tiny_b2[] = {0.0f, 0.0f};
+    CLModel tiny_model{};
+    tiny_model.input_dim = 1;
+    tiny_model.hidden_dim = 1;
+    tiny_model.output_dim = 2;
+    tiny_model.w1 = tiny_w1;
+    tiny_model.b1 = tiny_b1;
+    tiny_model.w2 = tiny_w2;
+    tiny_model.b2 = tiny_b2;
+    CLQuantModel tiny_quant{};
+    assert(cl_model_quantize(&tiny_model, &tiny_quant) == 0);
+    assert(std::isfinite(tiny_quant.s1[0]) && tiny_quant.s1[0] > 0.0f);
+    assert(tiny_quant.w1[0] > 0);
+    cl_quantized_model_free(&tiny_quant);
+
     std::cout << "all cortexlite unit tests passed\n";
 }
