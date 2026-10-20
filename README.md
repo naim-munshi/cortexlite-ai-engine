@@ -56,6 +56,14 @@ The program returns the predicted class, softmax confidence, precision/kernel co
 
 ![Measured wall throughput chart with labeled context for the tiny synthetic workload](assets/benchmark-throughput.svg)
 
+### Independent macOS ARM64 measurements
+
+The same educational workload was also measured on a real **macOS ARM64 machine** using the CMake-free native build: **35 observations, five runs per condition**. The measured median four-thread vs one-thread throughput ratio was **1.69×**. ARM NEON SIMD measured **1.02×** and weight-only INT8 **1.01×** scalar throughput—neither is a reliable optimization win on this small network. At **ef=64**, graph search achieved **95.2% Recall@10** while graph p95 (46.416 µs) was **higher** than exact p95 (42.750 µs).
+
+![Five-run median macOS ARM64 benchmark throughput](assets/benchmark-macos-throughput.svg)
+
+**[Read the full Mac results and methodology](docs/results-macos.md)** · [Mac raw CSV](reports/benchmarks-macos-arm64-20261020.csv) · [Mac raw JSON](reports/benchmarks-macos-arm64-20261020.json). **Do not interpret cross-host throughput differences as an Apple-vs-Linux ranking**: toolchains, operating systems and host scheduling conditions differ.
+
 **Evidence:** [Full benchmark analysis](docs/results.md) · [35 raw measurement records (CSV)](reports/benchmarks-linux-container.csv) · [Raw JSON and host metadata](reports/benchmarks-linux-container.json) · [Reproduction protocol](docs/benchmarks.md). Latency and speed measurements are especially sensitive to noisy shared hosts; the report includes negative results and limitations.
 
 ## Run it yourself

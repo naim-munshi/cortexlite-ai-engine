@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 390" width="980" height="390" role="img" aria-labelledby="title description">
+<title id="title">CortexLite — graph recall and latency trade-off on macOS ARM64</title>
+<desc id="description">Median of five runs on 1000 seeded synthetic 32D vectors and 100 queries, k=10. ef16 Recall at 10 79.3 percent, graph p95 18.708 microseconds; ef64 recall 95.2 percent, graph p95 46.416 microseconds; ef128 recall 98.7 percent, graph p95 74.625 microseconds. Exact p95 approximately 42 microseconds. The graph is educational, not HNSW.</desc>
+<rect width="980" height="390" fill="#f8fafc" rx="12"/>
+<text x="30" y="42" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#0f172a">Approximate graph search: recall vs p95 latency</text>
+<text x="30" y="68" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#475569">macOS ARM64 · 1,000 synthetic 32D vectors · 100 fixed-seed queries · k=10</text>
+<text x="144" y="102" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Recall@10 (higher better)</text>
+<text x="584" y="102" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a">Graph p95 µs (lower better)</text>
+<g font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#0f172a">
+<text x="30" y="155">ef=16</text>
+<text x="30" y="231">ef=64</text>
+<text x="30" y="307">ef=128</text>
+</g>
+<g stroke="#cbd5e1">
+<line x1="146" y1="116" x2="146" y2="321"/>
+<line x1="584" y1="116" x2="584" y2="321"/>
+</g>
+<rect x="146" y="133" width="285" height="33" rx="5" fill="#0369a1"/>
+<rect x="146" y="209" width="343" height="33" rx="5" fill="#0369a1"/>
+<rect x="146" y="285" width="355" height="33" rx="5" fill="#0369a1"/>
+<rect x="584" y="133" width="75" height="33" rx="5" fill="#0f766e"/>
+<rect x="584" y="209" width="186" height="33" rx="5" fill="#0f766e"/>
+<rect x="584" y="285" width="298" height="33" rx="5" fill="#0f766e"/>
+<g font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a">
+<text x="444" y="155">79.3%</text>
+<text x="502" y="231">95.2%</text>
+<text x="514" y="307">98.7%</text>
+<text x="671" y="155">18.708</text>
+<text x="782" y="231">46.416</text>
+<text x="892" y="307">74.625</text>
+</g>
+<line x1="30" y1="344" x2="950" y2="344" stroke="#cbd5e1"/>
+<text x="30" y="366" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#475569">Exact p95: 42.041–42.750 µs across configurations. Increasing ef trades speed for recall.</text>
+<text x="30" y="381" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#64748b">Measured toy retrieval only, not semantic search quality or a large-scale ANN database.</text>
+</svg>

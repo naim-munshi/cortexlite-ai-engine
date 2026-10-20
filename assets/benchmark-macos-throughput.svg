@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 415" width="980" height="415" role="img" aria-labelledby="title description">
+<title id="title">CortexLite — macOS ARM64 wall throughput</title>
+<desc id="description">From five real repetitions on macOS ARM64. Median wall operations per second on a toy 2x8x3 MLP and an 18-vector lookup set: FP32 scalar one thread 1,043,741; FP32 NEON SIMD one thread 1,065,890; FP32 scalar four threads 1,762,063; weight-only INT8 one thread 1,053,001. This is not production serving throughput.</desc>
+<rect width="980" height="415" fill="#f8fafc" rx="12"/>
+<text x="30" y="44" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="22">Measured inference + 18-vector search throughput</text>
+<text x="30" y="70" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="14">macOS ARM64 · Apple Clang 17 · 5 repeated runs per condition · median ops/sec</text>
+<g font-family="Arial, Helvetica, sans-serif" fill="#0f172a" font-size="15">
+<text x="30" y="134">FP32 scalar · 1 thread</text>
+<text x="30" y="196">FP32 NEON · 1 thread</text>
+<text x="30" y="258">FP32 scalar · 4 threads</text>
+<text x="30" y="320">INT8 weights · 1 thread</text>
+</g>
+<g stroke="#cbd5e1" stroke-width="1">
+<line x1="248" y1="94" x2="248" y2="338"/>
+<line x1="468" y1="94" x2="468" y2="338" stroke-dasharray="3 3"/>
+<line x1="688" y1="94" x2="688" y2="338" stroke-dasharray="3 3"/>
+</g>
+<g font-family="Arial, Helvetica, sans-serif" fill="#64748b" font-size="12">
+<text x="248" y="359" text-anchor="middle">0</text>
+<text x="468" y="359" text-anchor="middle">0.75M</text>
+<text x="688" y="359" text-anchor="middle">1.50M</text>
+</g>
+<rect x="248" y="111" width="306" height="32" rx="5" fill="#2563eb"/>
+<rect x="248" y="173" width="313" height="32" rx="5" fill="#0284c7"/>
+<rect x="248" y="235" width="517" height="32" rx="5" fill="#0f766e"/>
+<rect x="248" y="297" width="309" height="32" rx="5" fill="#64748b"/>
+<g font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#0f172a">
+<text x="568" y="133">1,043,741</text>
+<text x="575" y="195">1,065,890</text>
+<text x="779" y="257">1,762,063</text>
+<text x="571" y="319">1,053,001</text>
+</g>
+<line x1="30" y1="377" x2="950" y2="377" stroke="#cbd5e1"/>
+<text x="30" y="396" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="12">Measured local CPU operations, not HTTP throughput. Each run: 5,000 operations; 2×8×3 toy model.</text>
+</svg>

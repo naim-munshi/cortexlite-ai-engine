@@ -48,6 +48,7 @@ Evaluated **SIMD, weight-only INT8, and 4-thread execution** on a small syntheti
 - [One-command local walkthrough](../scripts/showcase.sh)
 - [Build and CLI usage](../README.md#run-it-yourself)
 - [Performance methodology](benchmarks.md)
+- [Verified macOS ARM64 benchmark and cross-platform context](results-macos.md)
 - [Limitations](../README.md#scope-and-limitations)
 - [MIT license](../LICENSE)
 
