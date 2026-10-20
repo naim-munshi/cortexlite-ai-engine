@@ -19,6 +19,8 @@ jobs:
         run: cmake --build build --parallel 2
       - name: Regression and integration tests
         run: ctest --test-dir build --output-on-failure
+      - name: Show reproducible CLI demo
+        run: ./build/cortexlite demo --x 1.8 --y -2.0 --k 3 --search exact
       - name: Verify example accuracy thresholds
         run: python3 python/check_metrics.py --binary ./build/cortexlite
       - name: Five repeated benchmarks (CI runner, not production)
