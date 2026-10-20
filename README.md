@@ -5,7 +5,7 @@
 
 CortexLite demonstrates a complete, inspectable pipeline: **train a small model in Python, run inference without Python in C, generate hidden-layer embeddings, and retrieve nearest neighbors using custom C++ data structures.** It is a focused **CPU AI systems and DSA portfolio project**, not a production LLM server or vector database.
 
-**Start here:** [Run a 2-minute local demo](#run-it-yourself) · [Measured performance](#measured-results) · [Technical reviewer brief](docs/portfolio-brief.md) · [Source code tour](#source-code-tour)
+**Start here:** [Run a local demo](#run-it-yourself) · [Measured performance](#measured-results) · [Technical reviewer brief](docs/portfolio-brief.md) · [Source code tour](#source-code-tour)
 
 ## What this project demonstrates
 
