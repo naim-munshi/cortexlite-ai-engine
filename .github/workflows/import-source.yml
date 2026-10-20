@@ -1,0 +1,39 @@
+name: Import CortexLite source
+on:
+  push:
+    branches:
+      - MdNaim
+    paths:
+      - .github/workflows/import-source.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Verify and unpack source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .cortexlite-bootstrap/part-* | base64 --decode > /tmp/cortexlite.tar.xz
+          echo "d13f0d56a6c52191e6cb9695054896117f063a224f1e2f6c6f69992ad86aa372  /tmp/cortexlite.tar.xz" | sha256sum --check
+          mkdir -p /tmp/cortexlite-source
+          tar -xJf /tmp/cortexlite.tar.xz -C /tmp/cortexlite-source
+          cp -a /tmp/cortexlite-source/cortexlite-ai-engine/. .
+          rm -rf .cortexlite-bootstrap
+          rm .github/workflows/import-source.yml
+      - name: Commit imported project files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: publish CortexLite C/C++ AI inference and vector search engine"
+          git push origin HEAD:MdNaim
