@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="385" viewBox="0 0 900 385" role="img" aria-labelledby="title desc">
+<title id="title">CortexLite CLI demonstration output</title>
+<desc id="desc">GitHub Actions verified terminal transcript for an input of 1.8 and minus 2.0, with predicted class 1, confidence 0.9999, and three nearest neighbors from the native C plus C++ engine.</desc>
+<rect width="900" height="385" rx="13" fill="#0f172a"/>
+<path d="M13 0h874a13 13 0 0 1 13 13v37H0V13A13 13 0 0 1 13 0Z" fill="#1e293b"/>
+<circle cx="23" cy="25" r="6" fill="#fb7185"/><circle cx="44" cy="25" r="6" fill="#fbbf24"/><circle cx="65" cy="25" r="6" fill="#34d399"/>
+<text x="450" y="30" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" fill="#cbd5e1">CortexLite · CI-verified CLI demo · synthetic dataset</text>
+<g font-family="Menlo,Consolas,monospace" font-size="15" xml:space="preserve">
+<text x="24" y="80" fill="#86efac">$ ./build/cortexlite demo --x 1.8 --y -2.0 --k 3 --search exact</text>
+<text x="24" y="114" fill="#e2e8f0">CortexLite demo</text>
+<text x="24" y="140" fill="#cbd5e1">input:                [1.8000, -2.0000]</text>
+<text x="24" y="166" fill="#cbd5e1">predicted_class:      <tspan fill="#5eead4">1</tspan></text>
+<text x="24" y="192" fill="#cbd5e1">confidence:           <tspan fill="#5eead4">0.9999</tspan></text>
+<text x="24" y="218" fill="#cbd5e1">precision: fp32       kernel: scalar</text>
+<text x="24" y="244" fill="#cbd5e1">weight_storage_bytes: 204      index_size: 18</text>
+<text x="24" y="270" fill="#cbd5e1">search: exact</text>
+<text x="24" y="296" fill="#93c5fd">neighbor: B01 class=1 cosine=1.0000</text>
+<text x="24" y="322" fill="#93c5fd">neighbor: B02 class=1 cosine=0.9999</text>
+<text x="24" y="348" fill="#93c5fd">neighbor: B06 class=1 cosine=0.9988</text>
+</g>
+<text x="875" y="372" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="10" fill="#94a3b8">Source: GitHub Actions Linux run #39380144660</text>
+</svg>

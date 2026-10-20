@@ -1,60 +1,87 @@
 # CortexLite
+[![CI](https://github.com/naim-munshi/cortexlite-ai-engine/actions/workflows/ci.yml/badge.svg?branch=MdNaim)](https://github.com/naim-munshi/cortexlite-ai-engine/actions/workflows/ci.yml)
 
-**CortexLite is an educational C/C++ AI inference and vector search engine.** It runs a small PyTorch-trained neural network using a dependency-free C inference core, produces hidden-layer embeddings, and searches them using custom C++ data structures and algorithms.
+**A C11 + C++17 AI inference and vector-search engine, backed by a PyTorch-trained model and reproducible benchmarks.**
 
-The purpose of the project is to demonstrate **AI inference, data structures and algorithms (DSA), systems programming, and measurable performance** in one coherent engineering project. It is a CPU reference implementation, not a production LLM engine or a full vector database.
+CortexLite demonstrates a complete, inspectable pipeline: **train a small model in Python, run inference without Python in C, generate hidden-layer embeddings, and retrieve nearest neighbors using custom C++ data structures.** It is a focused **CPU AI systems and DSA portfolio project**, not a production LLM server or vector database.
 
-## Language responsibilities
+**Start here:** [Run a local demo](#run-it-yourself) · [Measured performance](#measured-results) · [Technical reviewer brief](docs/portfolio-brief.md) · [Source code tour](#source-code-tour)
 
-| Language | Responsibilities | Demonstrated skill |
+## What this project demonstrates
+
+| Language | Actual engineering work | Inspect the implementation |
 |---|---|---|
-| **C11** | Row-major scalar/SSE2/NEON matrix operations, ReLU, stable softmax, two-layer MLP, symmetric per-row INT8 weight quantization, explicit memory lifecycle and model loading | Low-level programming and ML execution |
-| **C++17** | Open-addressing hash map, custom top-K min-heap, graph adjacency index, exact and approximate nearest-neighbor searches, C++17 multithreaded batch benchmark, CLI application | DSA, interfaces, algorithms and integration |
-| **Python / PyTorch** | Reproducible model training, portable weight export and independent numerical parity checks | Model development and inference validation |
-| **CMake / GitHub Actions** | Builds, regression tests, cross-platform CI | Engineering discipline |
+| **C11 — inference core** | Model weights and memory ownership; FP32 matrix operations, softmax/ReLU; optional SSE2/NEON; per-row INT8 weight quantization | [inference.c](src/c/inference.c) · [tensor.c](src/c/tensor.c) |
+| **C++17 — DSA and orchestration** | Custom open-addressing hash map, top-K min-heap, adjacency graph, exact/approximate nearest-neighbor search, multithreaded benchmark | [vector_index.cpp](src/cpp/vector_index.cpp) · [main.cpp](src/cpp/main.cpp) |
+| **Python / PyTorch — model development** | Deterministic model training, portable weight export, FP32 numerical parity check, repeated benchmark data collection | [train_model.py](python/train_model.py) · [verify_parity.py](python/verify_parity.py) · [run_benchmarks.py](scripts/run_benchmarks.py) |
+| **CMake / GitHub Actions** | CPU-native builds, seven regression/integration tests, Linux/macOS CI and ASan/UBSan validation | [CMakeLists.txt](CMakeLists.txt) · [CI](.github/workflows/ci.yml) |
 
-### End-to-end flow
+## End-to-end architecture
 
-```
-Python/PyTorch: train 2D/3-class MLP -> export CLMODEL1 weights
-                                         |
-                                         v
-C11: load weights -> matrix operations -> hidden embedding -> predictions
-                                         |
-                                         v
-C++17: hash IDs -> build vector graph -> exact / graph neighbor search
-                                         |
-                                         v
-                 Unified CLI: demo, evaluate, benchmark
+```mermaid
+flowchart TD
+    P["Python / PyTorch<br/>Train 2-input → 8-hidden → 3-class MLP"] --> W["Export CLMODEL1 weights"]
+    W --> C["C11 inference engine<br/>FP32 or weight-only INT8<br/>Optional SSE2 / ARM NEON"]
+    C --> E["Class probabilities + 8-D hidden embeddings"]
+    E --> D["C++17 DSA index<br/>Hash table · top-K min-heap · neighbor graph"]
+    D --> R["Native CLI<br/>Prediction · Exact/Graph KNN · Benchmark"]
+    R --> T["Evidence<br/>Accuracy · Recall@K · p50/p95 · Throughput"]
 ```
 
-## Requirements
+**Why three languages?** Python is the training/evaluation tool, **C** is the low-level neural-network execution layer, and **C++** manages vector indexing, search algorithms and parallel operation execution. The final executable does **not** require Python or a GPU.
 
-- C11 compiler, C++17 compiler, and CMake 3.16+
-- Python 3.9+ with PyTorch (only needed to retrain or run the independent parity check)
-- Linux or macOS; CPU only
+## See it working
 
-## Quick start
+The following output comes from an actual [Linux GitHub Actions run](https://github.com/naim-munshi/cortexlite-ai-engine/actions/runs/39380144660) using the checked-in sample model, **not** from invented results or a hosted service.
 
-From the repository root:
+![Terminal-style visualization of verified CortexLite CLI output: predicted class 1 and three nearest vectors](assets/cli-demo.svg)
+
+```bash
+./build/cortexlite demo --x 1.8 --y -2.0 --k 3 --search exact
+```
+
+The program returns the predicted class, softmax confidence, precision/kernel configuration, model parameter storage and three cosine nearest neighbors. It supports `demo`, `evaluate`, and `benchmark` commands.
+
+## Measured results
+
+**Observed median values across five runs per configuration**, collected on a **shared Linux x86_64 container** (2026-10-20). The inference/throughput study uses a **2×8×3 toy MLP** and an **18-vector index**; numbers do not represent deployed service requests or large-model inference.
+
+| Compared conditions | Observation | Interpretation |
+|---|---:|---|
+| FP32, scalar, **4 threads vs 1** | **2.09×** wall throughput | 3.63M vs 1.74M repeated operations/s on this host; not guaranteed elsewhere |
+| Weight-only **INT8 vs FP32** | **37.3%** less model parameter storage | 128 vs 204 bytes; activations/biases remain FP32 |
+| **SSE2 vs scalar**, 1 thread | **0.92×** throughput | SIMD was slower for this tiny network |
+| **INT8 vs FP32**, 1 thread | **0.87×** throughput | Storage savings did not produce a speedup |
+| Approximate graph search, **ef=64** | **95.2% Recall@10** | Against exact top-10 on **1,000 synthetic 32-D vectors / 100 queries** |
+
+![Measured wall throughput chart with labeled context for the tiny synthetic workload](assets/benchmark-throughput.svg)
+
+**Evidence:** [Full benchmark analysis](docs/results.md) · [35 raw measurement records (CSV)](reports/benchmarks-linux-container.csv) · [Raw JSON and host metadata](reports/benchmarks-linux-container.json) · [Reproduction protocol](docs/benchmarks.md). Latency and speed measurements are especially sensitive to noisy shared hosts; the report includes negative results and limitations.
+
+## Run it yourself
+
+**Requirements:** C11 + C++17 compilers, CMake ≥3.16 and Linux/macOS; no API key, Docker, GPU, account or Python dependency for native inference.
+
+The fastest complete walkthrough builds the project, runs **all seven tests**, prints a real prediction and compares exact versus approximate search:
+
+```bash
+git clone https://github.com/naim-munshi/cortexlite-ai-engine.git
+cd cortexlite-ai-engine
+bash scripts/showcase.sh
+```
+
+Alternatively, use the normal CMake workflow:
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
+cmake --build build --parallel 2
 ctest --test-dir build --output-on-failure
 ./build/cortexlite demo
-./build/cortexlite evaluate
-./build/cortexlite benchmark --iterations 5000 --search exact
-./build/cortexlite benchmark --iterations 5000 --search graph --ef 32
+./build/cortexlite benchmark --precision fp32 --kernel scalar --threads 4 --iterations 5000
+./build/cortexlite_vector_benchmark --vectors 1000 --dimensions 32 --queries 100 --k 10 --ef 64 --seed 42
 ```
 
-Default demo query is `(1.8, -2.0)`. To run another:
-
-```bash
-./build/cortexlite demo --x -2.1 --y -1.9 --k 3 --search exact
-```
-
-Optional PyTorch training and verification:
+**Optional Python training / verification:**
 
 ```bash
 python3 -m pip install -r python/requirements.txt
@@ -62,98 +89,24 @@ python3 python/train_model.py --output data/demo_model.clm
 python3 python/verify_parity.py --binary ./build/cortexlite
 ```
 
-If you retrain, rebuild is unnecessary because model weights are loaded from disk.
+## Source code tour
 
-## Optimization and reproducible evaluation (v1.0)
+1. **Model training:** [`python/train_model.py`](python/train_model.py) exports a deterministic PyTorch model to the [CLMODEL1 file format](docs/model_format.md).
+2. **C inference:** [`src/c/inference.c`](src/c/inference.c) loads weights, performs two-layer inference and supports per-row INT8 weights; [`src/c/tensor.c`](src/c/tensor.c) holds the scalar/SIMD kernels.
+3. **C++ algorithms:** [`src/cpp/vector_index.cpp`](src/cpp/vector_index.cpp) implements the custom hash table, top-K heap and graph-based retrieval.
+4. **Integration:** [`src/cpp/main.cpp`](src/cpp/main.cpp) connects the C and C++ modules, reports predictions and measures CPU execution.
+5. **Verification:** [`tests/test_core.cpp`](tests/test_core.cpp), [`benchmarks/vector_benchmark.cpp`](benchmarks/vector_benchmark.cpp) and [GitHub CI](.github/workflows/ci.yml) cover regression tests, exact/approximate recall, multithreading and sanitizer checks.
 
-```bash
-# Matvec kernel: compile-time SSE2 or ARM NEON; explicit unsupported error.
-./build/cortexlite benchmark --precision fp32 --kernel scalar --threads 1 --iterations 5000
-./build/cortexlite benchmark --precision fp32 --kernel simd --threads 1 --iterations 5000
+**Algorithmic complexity:** hash table lookup is O(1) expected / O(n) worst case; exact cosine top-K is O(nd + n log k); graph construction is O(n²d). The graph implementation is an educational neighbor graph, **not HNSW**. See [architecture & DSA discussion](docs/architecture.md).
 
-# Parallel read-only inference + nearest-neighbor search.
-./build/cortexlite benchmark --precision fp32 --kernel scalar --threads 4 --iterations 5000
+## Scope and limitations
 
-# Symmetric per-row INT8 weights; FP32 biases and activations.
-./build/cortexlite benchmark --precision int8 --kernel scalar --threads 1 --iterations 5000
+- The sample classifier has **2 inputs, 8 hidden units, 3 classes**, with 12 held-out synthetic evaluation samples and an 18-vector lookup set. It is deliberately **not** a real-world benchmark for classifier accuracy, vector relevance, or model scale.
+- The retrieval study is a **separate** seeded 1,000×32 synthetic benchmark; reported Recall@10 is *overlap with exact KNN*, not semantic search quality.
+- INT8 is **weight-only symmetric per-row quantization** (FP32 activations and biases), not an integer-only neural accelerator. SIMD does not improve throughput in this tiny model.
+- No hosted UI, HTTP endpoint, GPU, LLM token generation, scalable HNSW, persistent database, or production SLA is claimed.
+- Performance figures come from one shared Linux container with no dedicated CPU pinning. Re-run [the benchmark protocol](docs/benchmarks.md) before making machine-specific claims.
 
-# Fixed-seed, scaled approximate-search vs exact top-K recall.
-./build/cortexlite_vector_benchmark --vectors 1000 --dimensions 32 --queries 100 --k 10 --ef 64 --seed 42
+**For reviewers and interviewers:** [One-page technical brief, engineering decisions and conservative CV wording](docs/portfolio-brief.md) · [All seven implementation phases](docs/roadmap.md).
 
-# Five independent repetitions of each configuration, raw CSV and JSON output.
-python3 scripts/run_benchmarks.py --repetitions 5 --iterations 5000 --vectors 1000
-
-# AddressSanitizer and UndefinedBehaviorSanitizer.
-cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=Debug -DCORTEXLITE_SANITIZERS=ON
-cmake --build build-sanitize --parallel 2
-ctest --test-dir build-sanitize --output-on-failure
-```
-
-**Accuracy and performance tradeoffs:** The 2-input/8-hidden/3-output toy model is too small to show reliable SIMD or INT8 speedups. INT8 reduces *stored model weights* but is not an integer-only inference kernel and may be slower. `--threads` parallelizes independent inference/search requests in the C++ CLI; this is not a network serving benchmark. Consult [measured results](docs/results.md), [benchmark protocol](docs/benchmarks.md), and raw [repeat samples](reports/benchmarks-linux-container.csv).
-
-## What is measured
-
-- **Classification accuracy** on 12 held-out, hand-picked synthetic evaluation points.
-- **Top-1 retrieved-label accuracy** against an index of 18 synthetic reference embeddings; this is *not* Recall@K over a real corpus.
-- **p50/p95 end-to-end operation latency**, plus timed-section throughput for the MLP inference and search call.
-- **Exact versus neighbor-graph search** under the same model and dataset.
-
-The checked-in model and dataset are a small deterministic teaching example. Their accuracy and microsecond-scale latency must **not** be extrapolated to real industrial systems. Collect larger datasets, multiple runs and realistic queries for a portfolio-grade performance study.
-
-## Repository structure
-
-```
-include/cortexlite/
-  tensor.h             C tensor/math API
-  inference.h          C model API
-  vector_index.hpp     C++ DSA/vector index API
-src/c/
-  tensor.c             Matrix-vector, ReLU, softmax, cosine
-  inference.c          Model loader, two-layer MLP inference
-benchmarks/
-  vector_benchmark.cpp  Seeded exact-vs-graph Recall@K experiment
-scripts/
-  run_benchmarks.py     Five-run raw CPU benchmark collector
-reports/
-  benchmarks-linux-container.json  35 measured runs with environment metadata
-src/cpp/
-  vector_index.cpp     Hash map, top-K heap, graph index and search
-  main.cpp             CLI: demo/evaluate/benchmark
-data/
-  demo_model.clm       Exported example model weights
-  samples.csv          Reference vectors (via C hidden activations)
-  eval.csv             Separate evaluation inputs
-python/
-  train_model.py       PyTorch training and model export
-  verify_parity.py     PyTorch vs C inference consistency
-  requirements.txt
-tests/
-  test_core.cpp        C tensor, MLP, DSA, and graph tests
- docs/
-  architecture.md
-  roadmap.md
-  benchmarks.md
-  results.md          Five-run measured performance summary
-  model_format.md
-.github/workflows/
-  ci.yml
-CMakeLists.txt
-```
-
-## Algorithms
-
-- **Open-addressing hash map:** average O(1) lookup/insert; worst-case O(n) with collisions.
-- **Fixed-capacity min-heap:** O(n log k) exact top-k selection over n vectors, O(k) auxiliary heap memory.
-- **Exact cosine search:** O(n d + n log k), where d is embedding dimension.
-- **Neighbor graph:** insertion scans prior vectors, O(n² d) total construction; best-first query visits at most `ef` expanded nodes but can discover more than `ef` neighbors. Approximate results are **not guaranteed** to match exact search.
-- **MLP inference:** O(i h + h o) arithmetic, where i/h/o are input/hidden/output dimensions.
-
-See [architecture](docs/architecture.md), [roadmap](docs/roadmap.md) and [benchmark guidance](docs/benchmarks.md).
-
-## Limitations
-
-The example is a 2D toy classifier with 8-dimensional hidden embeddings and three output classes. `CLMODEL1` supports general layer dimensions, but the CLI CSV adapter expects two input features. The neighbor graph is a simple educational approximate-search method, **not HNSW**. SIMD, weight-only INT8 and multithreaded batch benchmarks are implemented. Production-scale model serving, realistic datasets, true integer-only kernels, and a scalable ANN index remain out of scope.
-
-## License
-
-MIT. See [LICENSE](LICENSE).
+Licensed under the [MIT License](LICENSE).

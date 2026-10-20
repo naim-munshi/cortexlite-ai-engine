@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="360" viewBox="0 0 920 360" role="img" aria-labelledby="title desc">
+<title id="title">CortexLite wall throughput comparison</title>
+<desc id="desc">Median of five Linux container runs on a small 2 by 8 by 3 MLP with an 18-vector index. FP32 scalar one thread 1.74 million operations per second, SSE2 one thread 1.61 million, FP32 scalar four threads 3.63 million, and weight-only INT8 one thread 1.52 million. SIMD and INT8 were slower on this tiny workload. Results are not production serving throughput.</desc>
+<rect width="920" height="360" rx="14" fill="#f8fafc"/>
+<text x="30" y="40" font-family="Arial,Helvetica,sans-serif" font-size="21" font-weight="700" fill="#0f172a">Measured wall throughput</text>
+<text x="30" y="64" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#475569">Million inference + search operations / second · higher is better</text>
+<line x1="255" y1="85" x2="255" y2="280" stroke="#cbd5e1" stroke-width="1"/>
+<line x1="463" y1="85" x2="463" y2="280" stroke="#e2e8f0" stroke-width="1"/>
+<line x1="670" y1="85" x2="670" y2="280" stroke="#e2e8f0" stroke-width="1"/>
+<text x="255" y="299" font-size="11" font-family="Arial,Helvetica,sans-serif" fill="#64748b">0</text>
+<text x="454" y="299" font-size="11" font-family="Arial,Helvetica,sans-serif" fill="#64748b">1.8M</text>
+<text x="658" y="299" font-size="11" font-family="Arial,Helvetica,sans-serif" fill="#64748b">3.6M</text>
+<text x="30" y="117" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#0f172a">FP32 scalar · 1 thread</text>
+<rect x="255" y="96" width="199" height="28" rx="5" fill="#2563eb"/>
+<text x="464" y="116" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="600" fill="#0f172a">1.74M</text>
+<text x="30" y="169" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#0f172a">FP32 SSE2 · 1 thread</text>
+<rect x="255" y="148" width="184" height="28" rx="5" fill="#64748b"/>
+<text x="449" y="168" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="600" fill="#0f172a">1.61M</text>
+<text x="30" y="221" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#0f172a">FP32 scalar · 4 threads</text>
+<rect x="255" y="200" width="415" height="28" rx="5" fill="#0f766e"/>
+<text x="680" y="220" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="600" fill="#0f172a">3.63M</text>
+<text x="30" y="273" font-family="Arial,Helvetica,sans-serif" font-size="15" fill="#0f172a">INT8 weights · 1 thread</text>
+<rect x="255" y="252" width="173" height="28" rx="5" fill="#64748b"/>
+<text x="438" y="272" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="600" fill="#0f172a">1.52M</text>
+<line x1="30" y1="316" x2="890" y2="316" stroke="#cbd5e1"/>
+<text x="30" y="336" font-family="Arial,Helvetica,sans-serif" font-size="12" fill="#475569">Linux shared container · 5 repeats · 5,000 operations/run · 2×8×3 toy MLP + 18 vectors</text>
+<text x="30" y="351" font-family="Arial,Helvetica,sans-serif" font-size="11" fill="#64748b">Not an isolated benchmark, deployed request rate, or a large-model performance claim.</text>
+</svg>

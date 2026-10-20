@@ -21,6 +21,12 @@ CortexLite is a single native executable that demonstrates how a trained neural 
 
 **Cosine similarity:** returns zero for a zero-length vector; used consistently by exact and graph search. The example embeds points with nonnegative ReLU outputs.
 
-## Explicit non-goals in v0.1
+## Optimization and evaluation (v1.0)
 
-No serving HTTP API, GPU kernel, LLM token generation, persistent index format, production vector database, external cloud infrastructure or UI. Those features would distract from the core C/C++/DSA learning objective.
+The C11 core now includes optional x86 SSE2 / ARM NEON matrix-vector paths and symmetric per-row INT8 **weight-only** inference. Biases and activations remain FP32; the quantized model owns the weights and scales independently, and the CLI frees its original FP32 weight buffers after conversion. The C++ CLI also supports parallel **read-only inference and search operations**, measured using worker wall-clock time rather than pretending to run an HTTP service.
+
+The seeded C++ search study benchmarks 1,000 synthetic 32-dimensional vectors and 100 queries, reporting Recall@10 against exact top-10 as well as p50/p95 search time. It is independent from the 18-vector classifier demo. Five repetitions per configuration and raw results are included under `reports/`; see [measured results](results.md) and [reproduction method](benchmarks.md).
+
+## Explicit non-goals in v1.0
+
+No serving HTTP API, GPU kernel, LLM token generation, persistent index format, production vector database, external cloud infrastructure, web UI or production performance claim. Those features would distract from the bounded C/C++/DSA educational objective.
