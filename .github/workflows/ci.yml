@@ -19,6 +19,10 @@ jobs:
         run: cmake --build build --parallel 2
       - name: Regression and integration tests
         run: ctest --test-dir build --output-on-failure
+      - name: Verify checked-in macOS and Linux benchmark evidence
+        run: |
+          python3 scripts/verify_benchmark_evidence.py --json reports/benchmarks-macos-arm64-20261020.json --csv reports/benchmarks-macos-arm64-20261020.csv
+          python3 scripts/verify_benchmark_evidence.py --json reports/benchmarks-linux-container.json --csv reports/benchmarks-linux-container.csv
       - name: Show reproducible CLI demo
         run: ./build/cortexlite demo --x 1.8 --y -2.0 --k 3 --search exact
       - name: Verify one-command recruiter showcase
