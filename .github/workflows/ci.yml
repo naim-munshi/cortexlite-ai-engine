@@ -26,6 +26,10 @@ jobs:
         run: bash scripts/showcase.sh
       - name: Verify example accuracy thresholds
         run: python3 python/check_metrics.py --binary ./build/cortexlite
+      - name: Independently verify native inference numerics (Python stdlib)
+        run: python3 python/verify_native_reference.py --binary ./build/cortexlite
+      - name: Validate CMake-free native build on both operating systems
+        run: CORTEXLITE_FORCE_NATIVE=1 bash scripts/showcase.sh
       - name: Five repeated benchmarks (CI runner, not production)
         if: matrix.os == 'ubuntu-latest'
         run: python3 scripts/run_benchmarks.py --repetitions 5 --iterations 3000 --vectors 1000 --output reports/ci-benchmarks.json

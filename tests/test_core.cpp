@@ -63,6 +63,18 @@ int main(int argc, char **argv) {
     assert(hits.size() == 2 && hits.front().id == "A");
     auto graph = index.search_graph({1, 0}, 2, 10);
     assert(!graph.empty() && graph.front().id == "A");
+    // Equal cosine scores must favor earlier insertions, even after a
+    // stronger candidate arrives and replaces the worst top-k heap entry.
+    cortexlite::VectorIndex tie_index(2, 2);
+    const float offset = std::sqrt(0.75f);
+    tie_index.add("earlier", 0, {0.5f, offset});
+    tie_index.add("later", 0, {0.5f, -offset});
+    tie_index.add("strongest", 1, {1.0f, 0.0f});
+    auto tie_hits = tie_index.search_exact({1.0f, 0.0f}, 2);
+    assert(tie_hits.size() == 2);
+    assert(tie_hits[0].id == "strongest");
+    assert(tie_hits[1].id == "earlier");
+    assert(tie_index.search_exact({1.0f, 0.0f}, 0).empty());
     try { index.add("A", 0, {0, 0}); assert(false); }
     catch (const std::invalid_argument &) {}
     if (argc > 1) {

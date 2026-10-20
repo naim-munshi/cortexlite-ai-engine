@@ -21,7 +21,7 @@ public:
         if (heap_.size() < capacity_) {
             heap_.push_back(item);
             sift_up(heap_.size() - 1);
-        } else if (score > heap_[0].score) {
+        } else if (worse(heap_[0], item)) {
             heap_[0] = item;
             sift_down(0);
         }
@@ -34,12 +34,17 @@ public:
         return v;
     }
 private:
+    // A higher-index candidate loses a score tie to an earlier insertion.
+    // The heap root must therefore be the worst of the retained candidates.
+    static bool worse(const Neighbor &a, const Neighbor &b) {
+        return a.score < b.score || (a.score == b.score && a.index > b.index);
+    }
     std::size_t capacity_;
     std::vector<Neighbor> heap_;
     void sift_up(std::size_t i) {
         while (i) {
             std::size_t parent = (i - 1) / 2;
-            if (heap_[parent].score <= heap_[i].score) break;
+            if (!worse(heap_[i], heap_[parent])) break;
             std::swap(heap_[parent], heap_[i]);
             i = parent;
         }
@@ -47,8 +52,8 @@ private:
     void sift_down(std::size_t i) {
         while (true) {
             std::size_t smallest = i, left = i * 2 + 1, right = left + 1;
-            if (left < heap_.size() && heap_[left].score < heap_[smallest].score) smallest = left;
-            if (right < heap_.size() && heap_[right].score < heap_[smallest].score) smallest = right;
+            if (left < heap_.size() && worse(heap_[left], heap_[smallest])) smallest = left;
+            if (right < heap_.size() && worse(heap_[right], heap_[smallest])) smallest = right;
             if (smallest == i) break;
             std::swap(heap_[smallest], heap_[i]);
             i = smallest;
