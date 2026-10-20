@@ -8,8 +8,8 @@ The purpose of the project is to demonstrate **AI inference, data structures and
 
 | Language | Responsibilities | Demonstrated skill |
 |---|---|---|
-| **C11** | Row-major matrix operations, ReLU, stable softmax, cosine similarity, two-layer MLP, explicit memory lifecycle and model loading | Low-level programming and ML execution |
-| **C++17** | Open-addressing hash map, custom top-K min-heap, graph adjacency index, exact and approximate nearest-neighbor searches, CLI application | DSA, interfaces, algorithms and integration |
+| **C11** | Row-major scalar/SSE2/NEON matrix operations, ReLU, stable softmax, two-layer MLP, symmetric per-row INT8 weight quantization, explicit memory lifecycle and model loading | Low-level programming and ML execution |
+| **C++17** | Open-addressing hash map, custom top-K min-heap, graph adjacency index, exact and approximate nearest-neighbor searches, C++17 multithreaded batch benchmark, CLI application | DSA, interfaces, algorithms and integration |
 | **Python / PyTorch** | Reproducible model training, portable weight export and independent numerical parity checks | Model development and inference validation |
 | **CMake / GitHub Actions** | Builds, regression tests, cross-platform CI | Engineering discipline |
 
@@ -64,6 +64,33 @@ python3 python/verify_parity.py --binary ./build/cortexlite
 
 If you retrain, rebuild is unnecessary because model weights are loaded from disk.
 
+## Optimization and reproducible evaluation (v1.0)
+
+```bash
+# Matvec kernel: compile-time SSE2 or ARM NEON; explicit unsupported error.
+./build/cortexlite benchmark --precision fp32 --kernel scalar --threads 1 --iterations 5000
+./build/cortexlite benchmark --precision fp32 --kernel simd --threads 1 --iterations 5000
+
+# Parallel read-only inference + nearest-neighbor search.
+./build/cortexlite benchmark --precision fp32 --kernel scalar --threads 4 --iterations 5000
+
+# Symmetric per-row INT8 weights; FP32 biases and activations.
+./build/cortexlite benchmark --precision int8 --kernel scalar --threads 1 --iterations 5000
+
+# Fixed-seed, scaled approximate-search vs exact top-K recall.
+./build/cortexlite_vector_benchmark --vectors 1000 --dimensions 32 --queries 100 --k 10 --ef 64 --seed 42
+
+# Five independent repetitions of each configuration, raw CSV and JSON output.
+python3 scripts/run_benchmarks.py --repetitions 5 --iterations 5000 --vectors 1000
+
+# AddressSanitizer and UndefinedBehaviorSanitizer.
+cmake -S . -B build-sanitize -DCMAKE_BUILD_TYPE=Debug -DCORTEXLITE_SANITIZERS=ON
+cmake --build build-sanitize --parallel 2
+ctest --test-dir build-sanitize --output-on-failure
+```
+
+**Accuracy and performance tradeoffs:** The 2-input/8-hidden/3-output toy model is too small to show reliable SIMD or INT8 speedups. INT8 reduces *stored model weights* but is not an integer-only inference kernel and may be slower. `--threads` parallelizes independent inference/search requests in the C++ CLI; this is not a network serving benchmark. Consult [measured results](docs/results.md), [benchmark protocol](docs/benchmarks.md), and raw [repeat samples](reports/benchmarks-linux-container.csv).
+
 ## What is measured
 
 - **Classification accuracy** on 12 held-out, hand-picked synthetic evaluation points.
@@ -83,6 +110,12 @@ include/cortexlite/
 src/c/
   tensor.c             Matrix-vector, ReLU, softmax, cosine
   inference.c          Model loader, two-layer MLP inference
+benchmarks/
+  vector_benchmark.cpp  Seeded exact-vs-graph Recall@K experiment
+scripts/
+  run_benchmarks.py     Five-run raw CPU benchmark collector
+reports/
+  benchmarks-linux-container.json  35 measured runs with environment metadata
 src/cpp/
   vector_index.cpp     Hash map, top-K heap, graph index and search
   main.cpp             CLI: demo/evaluate/benchmark
@@ -100,6 +133,7 @@ tests/
   architecture.md
   roadmap.md
   benchmarks.md
+  results.md          Five-run measured performance summary
   model_format.md
 .github/workflows/
   ci.yml
@@ -118,7 +152,7 @@ See [architecture](docs/architecture.md), [roadmap](docs/roadmap.md) and [benchm
 
 ## Limitations
 
-The example is a 2D toy classifier with 8-dimensional hidden embeddings and three output classes. `CLMODEL1` supports general layer dimensions, but the CLI CSV adapter expects two input features. The neighbor graph is a simple educational approximate-search method, **not HNSW**. SIMD, quantized inference, multithreaded execution and production-scale benchmarking are documented future milestones, not implemented features.
+The example is a 2D toy classifier with 8-dimensional hidden embeddings and three output classes. `CLMODEL1` supports general layer dimensions, but the CLI CSV adapter expects two input features. The neighbor graph is a simple educational approximate-search method, **not HNSW**. SIMD, weight-only INT8 and multithreaded batch benchmarks are implemented. Production-scale model serving, realistic datasets, true integer-only kernels, and a scalable ANN index remain out of scope.
 
 ## License
 
