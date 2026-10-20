@@ -1,5 +1,5 @@
 # CortexLite
-[![CI](https://github.com/naim-munshi/cortexlite-ai-engine/actions/workflows/ci.yml/badge.svg?branch=MdNaim)](https://github.com/naim-munshi/cortexlite-ai-engine/actions/workflows/ci.yml)
+[![CI](https://github.com/naim-munshi/cortexlite-ai-engine/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/naim-munshi/cortexlite-ai-engine/actions/workflows/ci.yml)
 
 **A C11 + C++17 AI inference and vector-search engine, backed by a PyTorch-trained model and reproducible benchmarks.**
 
