@@ -14,7 +14,7 @@ CortexLite demonstrates a complete, inspectable pipeline: **train a small model 
 | **C11 — inference core** | Model weights and memory ownership; FP32 matrix operations, softmax/ReLU; optional SSE2/NEON; per-row INT8 weight quantization | [inference.c](src/c/inference.c) · [tensor.c](src/c/tensor.c) |
 | **C++17 — DSA and orchestration** | Custom open-addressing hash map, top-K min-heap, adjacency graph, exact/approximate nearest-neighbor search, multithreaded benchmark | [vector_index.cpp](src/cpp/vector_index.cpp) · [main.cpp](src/cpp/main.cpp) |
 | **Python / PyTorch — model development** | Deterministic model training, portable weight export, FP32 numerical parity check, repeated benchmark data collection | [train_model.py](python/train_model.py) · [verify_parity.py](python/verify_parity.py) · [run_benchmarks.py](scripts/run_benchmarks.py) |
-| **CMake / GitHub Actions** | CPU-native builds, seven regression/integration tests, Linux/macOS CI and ASan/UBSan validation | [CMakeLists.txt](CMakeLists.txt) · [CI](.github/workflows/ci.yml) |
+| **Build / GitHub Actions** | CMake or compiler-only build, seven native regression/integration checks, independent Python reference verification, Linux/macOS CI and ASan/UBSan validation | [CMakeLists.txt](CMakeLists.txt) · [native build](scripts/build-native.sh) · [CI](.github/workflows/ci.yml) |
 
 ## End-to-end architecture
 
@@ -60,7 +60,7 @@ The program returns the predicted class, softmax confidence, precision/kernel co
 
 ## Run it yourself
 
-**Requirements:** C11 + C++17 compilers, CMake ≥3.16 and Linux/macOS; no API key, Docker, GPU, account or Python dependency for native inference.
+**Requirements:** C11 and C++17 compilers on Linux or macOS; Python 3 for the bundled validation and benchmark scripts. CMake ≥3.16 is optional: when absent, the showcase automatically builds with the system C/C++ compilers. There is no Homebrew, Docker, GPU, API key or account requirement.
 
 The fastest complete walkthrough builds the project, runs **all seven tests**, prints a real prediction and compares exact versus approximate search:
 
@@ -69,6 +69,14 @@ git clone https://github.com/naim-munshi/cortexlite-ai-engine.git
 cd cortexlite-ai-engine
 bash scripts/showcase.sh
 ```
+
+**Mac without CMake or Homebrew:** The same `bash scripts/showcase.sh` detects the missing CMake command and compiles directly using the Apple Command Line Tools (`cc`, `c++`). To force/test that path on any machine:
+
+```bash
+CORTEXLITE_FORCE_NATIVE=1 bash scripts/showcase.sh
+```
+
+That route compiles into `build-native/`, executes the seven equivalent native test cases, checks accuracy, runs an independent **Python standard-library** reference comparison against the C inference output, then shows the CLI demo. `python/verify_parity.py` remains available for optional PyTorch-backed cross-checks.
 
 Alternatively, use the normal CMake workflow:
 
@@ -95,7 +103,7 @@ python3 python/verify_parity.py --binary ./build/cortexlite
 2. **C inference:** [`src/c/inference.c`](src/c/inference.c) loads weights, performs two-layer inference and supports per-row INT8 weights; [`src/c/tensor.c`](src/c/tensor.c) holds the scalar/SIMD kernels.
 3. **C++ algorithms:** [`src/cpp/vector_index.cpp`](src/cpp/vector_index.cpp) implements the custom hash table, top-K heap and graph-based retrieval.
 4. **Integration:** [`src/cpp/main.cpp`](src/cpp/main.cpp) connects the C and C++ modules, reports predictions and measures CPU execution.
-5. **Verification:** [`tests/test_core.cpp`](tests/test_core.cpp), [`benchmarks/vector_benchmark.cpp`](benchmarks/vector_benchmark.cpp) and [GitHub CI](.github/workflows/ci.yml) cover regression tests, exact/approximate recall, multithreading and sanitizer checks.
+5. **Verification:** [`tests/test_core.cpp`](tests/test_core.cpp), [`python/verify_native_reference.py`](python/verify_native_reference.py), [`benchmarks/vector_benchmark.cpp`](benchmarks/vector_benchmark.cpp) and [GitHub CI](.github/workflows/ci.yml) cover score ties, inference numerical parity, graph recall, multithreading, CMake-free builds and sanitizers.
 
 **Algorithmic complexity:** hash table lookup is O(1) expected / O(n) worst case; exact cosine top-K is O(nd + n log k); graph construction is O(n²d). The graph implementation is an educational neighbor graph, **not HNSW**. See [architecture & DSA discussion](docs/architecture.md).
 
