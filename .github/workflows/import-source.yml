@@ -27,7 +27,7 @@ jobs:
           tar -xJf /tmp/cortexlite.tar.xz -C /tmp/cortexlite-source
           cp -a /tmp/cortexlite-source/cortexlite-ai-engine/. .
           rm -rf .cortexlite-bootstrap
-          rm .github/workflows/import-source.yml
+          rm -f .github/workflows/ci.yml
       - name: Commit imported project files
         shell: bash
         run: |
