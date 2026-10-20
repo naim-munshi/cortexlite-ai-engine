@@ -103,6 +103,9 @@ static int quantize_rows(const float *src, int8_t *dst, float *scales,
             if (fabsf(v) > magnitude) magnitude = fabsf(v);
         }
         scales[r] = magnitude > 0.0f ? magnitude / 127.0f : 1.0f;
+        /* Subnormal finite weights can underflow when divided by 127.
+           Keep the scale strictly positive before dividing and rounding. */
+        if (scales[r] == 0.0f) scales[r] = nextafterf(0.0f, 1.0f);
         for (size_t c = 0; c < cols; ++c) {
             float scaled = src[r * cols + c] / scales[r];
             long rounded = lroundf(scaled);
