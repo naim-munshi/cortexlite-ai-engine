@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <cstdint>
 
 static bool nearly(float a, float b, float eps = 1e-4f) { return std::fabs(a - b) < eps; }
 int main(int argc, char **argv) {
@@ -24,6 +26,25 @@ int main(int argc, char **argv) {
     float aa[] = {1, 0}, bb[] = {0, 1}, cc[] = {2, 0};
     assert(nearly(cl_cosine_similarity(aa, bb, 2), 0));
     assert(nearly(cl_cosine_similarity(aa, cc, 2), 1));
+    // Compare accelerated matrix multiplication against FP64-accumulating baseline,
+    // including a non-multiple-of-four tail and different row magnitudes.
+    std::vector<float> big_matrix(19 * 31), big_input(31), expected(19), accelerated(19);
+    for (std::size_t i = 0; i < big_matrix.size(); ++i)
+        big_matrix[i] = static_cast<float>(std::sin(i * 0.37) * 3.0);
+    for (std::size_t i = 0; i < big_input.size(); ++i)
+        big_input[i] = static_cast<float>(std::cos(i * 0.21) * 2.0);
+    assert(cl_matvec(big_matrix.data(), big_input.data(), expected.data(), 19, 31) == 0);
+    if (cl_simd_available()) {
+        assert(cl_matvec_kernel(big_matrix.data(), big_input.data(), accelerated.data(),
+                                19, 31, CL_KERNEL_SIMD) == 0);
+        for (std::size_t i = 0; i < expected.size(); ++i)
+            assert(std::fabs(expected[i] - accelerated[i]) < 3e-5f);
+    } else {
+        assert(cl_matvec_kernel(big_matrix.data(), big_input.data(), accelerated.data(),
+                                19, 31, CL_KERNEL_SIMD) == -1);
+    }
+    assert(cl_matvec_kernel(nullptr, big_input.data(), accelerated.data(), 19, 31,
+                            CL_KERNEL_SCALAR) == -1);
     cortexlite::IdMap table;
     for (std::size_t i = 0; i < 1000; ++i) assert(table.insert("sample" + std::to_string(i), i));
     std::size_t location = 0;
@@ -52,7 +73,30 @@ int main(int argc, char **argv) {
         assert(cl_model_predict(&model, xy, hidden.data(), distribution.data()) == 0);
         assert(nearly(distribution[0] + distribution[1] + distribution[2], 1.0f));
         assert(distribution[1] > distribution[0] && distribution[1] > distribution[2]);
+        CLQuantModel quant{};
+        assert(cl_model_quantize(&model, &quant) == 0);
+        assert(cl_quantized_storage_bytes(&quant) < cl_model_storage_bytes(&model));
+        std::vector<float> qhidden(model.hidden_dim), qprob(model.output_dim);
+        for (int i = 0; i < 25; ++i) {
+            float coordinates[] = {static_cast<float>(i - 12) / 5.0f,
+                                   static_cast<float>(i % 9 - 4) / 3.0f};
+            assert(cl_model_predict(&model, coordinates, hidden.data(), distribution.data()) == 0);
+            assert(cl_quantized_model_predict(&quant, coordinates, qhidden.data(), qprob.data()) == 0);
+            for (std::size_t j = 0; j < model.output_dim; ++j)
+                assert(std::fabs(distribution[j] - qprob[j]) < 0.03f);
+            if (cl_simd_available()) {
+                std::vector<float> shidden(model.hidden_dim), sprob(model.output_dim);
+                assert(cl_model_predict_kernel(&model, coordinates, shidden.data(), sprob.data(),
+                                               CL_KERNEL_SIMD) == 0);
+                for (std::size_t j = 0; j < model.output_dim; ++j)
+                    assert(std::fabs(distribution[j] - sprob[j]) < 0.0001f);
+            }
+        }
+        // Quantized buffers survive releasing the original floating-point weights.
         cl_model_free(&model);
+        assert(cl_quantized_model_predict(&quant, xy, qhidden.data(), qprob.data()) == 0);
+        cl_quantized_model_free(&quant);
+        assert(cl_quantized_storage_bytes(&quant) == 0);
     }
     std::cout << "all cortexlite unit tests passed\n";
 }
