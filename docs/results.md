@@ -1,5 +1,7 @@
 # Measured benchmark results — CortexLite v1.0
 
+For the independent **real macOS ARM64 / Apple Clang 17** evidence collected with the CMake-free native build, see [macOS benchmark results](results-macos.md) and [raw Mac CSV](../reports/benchmarks-macos-arm64-20261020.csv). Cross-platform absolute timing values are **not** controlled hardware comparisons.
+
 These are **observed, not estimated** results of five repetitions on a Linux x86_64 shared container, collected on 2026-10-20 UTC. CPU model was not provided by `platform.processor()`; reported logical CPUs: **5**. Compiler: `c++ (Debian 14.2.0-19) 14.2.0`. OS: Linux 6.18.55. No dedicated CPU pinning or isolated host. Figures are **median of five individual runs**, not peak scores or production SLA.
 
 ## Scalar vs SIMD vs threads vs INT8
