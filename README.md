@@ -78,6 +78,8 @@ CORTEXLITE_FORCE_NATIVE=1 bash scripts/showcase.sh
 
 That route compiles into `build-native/`, executes the seven equivalent native test cases, checks accuracy, runs an independent **Python standard-library** reference comparison against the C inference output, then shows the CLI demo. `python/verify_parity.py` remains available for optional PyTorch-backed cross-checks.
 
+**Homebrew SSL/certificate problem?** Read [macOS setup & secure troubleshooting](docs/macos-setup.md). The no-CMake path does not require disabling certificate verification.
+
 Alternatively, use the normal CMake workflow:
 
 ```bash
